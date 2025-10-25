@@ -9,8 +9,8 @@ local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 
--- Orion Library の読み込み
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+-- Fluent UI の読み込み
+loadstring(game:HttpGet("https://github.com/devforfun/fluent-ui/raw/main/source.lua"))()
 
 -- ========================
 -- AI機能モジュール (13個搭載)
