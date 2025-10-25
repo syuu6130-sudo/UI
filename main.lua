@@ -1,4 +1,4 @@
--- AI搭載 高度カスタムUIシステム - Rayfield風 Part 1/4
+-- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 1/4
 -- LocalScript (StarterPlayer > StarterPlayerScripts に配置)
 
 local Players = game:GetService("Players")
@@ -10,8 +10,11 @@ local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- デバイス検出
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
 -- ========================
--- AI機能モジュール (12個以上搭載)
+-- AI機能モジュール (13個以上搭載)
 -- ========================
 
 local AIModules = {}
@@ -191,8 +194,8 @@ AIModules.VisionEnhancer = {
 }
 
 -- Part 1 終了
--- 次に Part 2 を要求してください
--- AI搭載 高度カスタムUIシステム Part 2/4
+-- 次に「パート2」と入力してください
+-- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 2/4
 -- Part 1 の続きです
 
 -- 7. AI自動収集システム
@@ -476,12 +479,12 @@ AIModules.GodMode = {
 }
 
 -- Part 2 終了
--- 次に Part 3 を要求してください
--- AI搭載 高度カスタムUIシステム Part 3/4
+-- 次に「パート3」と入力してください
+-- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 3/4
 -- Part 2 の続きです
 
 -- ========================
--- UIシステム
+-- UIシステム (スマホ対応)
 -- ========================
 
 local UISystem = {}
@@ -502,16 +505,21 @@ function UISystem.new()
     self:CreateMainWindow()
     self:CreateTabs()
     self:CreateNotificationSystem()
-    self:SetupToggle()
+    self:CreateMobileToggleButton()
     
     return self
 end
 
 function UISystem:CreateMainWindow()
+    -- スマホ対応サイズ
+    local windowWidth = isMobile and 0.95 or 0.4
+    local windowHeight = isMobile and 0.7 or 0.5
+    
     self.mainFrame = Instance.new("Frame")
     self.mainFrame.Name = "MainWindow"
-    self.mainFrame.Size = UDim2.new(0, 550, 0, 400)
-    self.mainFrame.Position = UDim2.new(0.5, -275, 0.5, -200)
+    self.mainFrame.Size = UDim2.new(windowWidth, 0, windowHeight, 0)
+    self.mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     self.mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     self.mainFrame.BorderSizePixel = 0
     self.mainFrame.Visible = false
@@ -530,7 +538,7 @@ function UISystem:CreateMainWindow()
     -- ヘッダー
     local header = Instance.new("Frame")
     header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, 50)
+    header.Size = UDim2.new(1, 0, 0, isMobile and 60 or 50)
     header.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     header.BorderSizePixel = 0
     header.Parent = self.mainFrame
@@ -540,23 +548,24 @@ function UISystem:CreateMainWindow()
     headerCorner.Parent = header
     
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(0, 200, 1, 0)
+    title.Size = UDim2.new(0.7, 0, 1, 0)
     title.Position = UDim2.new(0, 15, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "🚀 AI Control Hub"
+    title.Text = "🚀 AI Hub"
     title.TextColor3 = Color3.fromRGB(150, 150, 255)
-    title.TextSize = 18
+    title.TextSize = isMobile and 20 or 18
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
     
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 35, 0, 35)
-    closeBtn.Position = UDim2.new(1, -45, 0, 7.5)
+    closeBtn.Size = UDim2.new(0, isMobile and 50 or 35, 0, isMobile and 50 or 35)
+    closeBtn.Position = UDim2.new(1, isMobile and -55 or -45, 0.5, 0)
+    closeBtn.AnchorPoint = Vector2.new(0, 0.5)
     closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     closeBtn.Text = "✕"
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextSize = 18
+    closeBtn.TextSize = isMobile and 22 or 18
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.BorderSizePixel = 0
     closeBtn.Parent = header
@@ -569,25 +578,33 @@ function UISystem:CreateMainWindow()
         self:Toggle()
     end)
     
-    -- サイドバー
-    self.sidebar = Instance.new("Frame")
-    self.sidebar.Name = "Sidebar"
-    self.sidebar.Size = UDim2.new(0, 140, 1, -50)
-    self.sidebar.Position = UDim2.new(0, 0, 0, 50)
-    self.sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    self.sidebar.BorderSizePixel = 0
-    self.sidebar.Parent = self.mainFrame
+    -- タブボタン (横並び - スマホ対応)
+    self.tabContainer = Instance.new("ScrollingFrame")
+    self.tabContainer.Name = "TabContainer"
+    self.tabContainer.Size = UDim2.new(1, -10, 0, isMobile and 70 or 50)
+    self.tabContainer.Position = UDim2.new(0, 5, 0, isMobile and 65 or 55)
+    self.tabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    self.tabContainer.BorderSizePixel = 0
+    self.tabContainer.ScrollBarThickness = 4
+    self.tabContainer.CanvasSize = UDim2.new(2, 0, 0, 0)
+    self.tabContainer.ScrollingDirection = Enum.ScrollingDirection.X
+    self.tabContainer.Parent = self.mainFrame
     
-    local sidebarList = Instance.new("UIListLayout")
-    sidebarList.Padding = UDim.new(0, 5)
-    sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
-    sidebarList.Parent = self.sidebar
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 8)
+    tabCorner.Parent = self.tabContainer
+    
+    local tabList = Instance.new("UIListLayout")
+    tabList.FillDirection = Enum.FillDirection.Horizontal
+    tabList.Padding = UDim.new(0, 5)
+    tabList.SortOrder = Enum.SortOrder.LayoutOrder
+    tabList.Parent = self.tabContainer
     
     -- コンテンツエリア
     self.contentArea = Instance.new("Frame")
     self.contentArea.Name = "ContentArea"
-    self.contentArea.Size = UDim2.new(1, -140, 1, -50)
-    self.contentArea.Position = UDim2.new(0, 140, 0, 50)
+    self.contentArea.Size = UDim2.new(1, -10, 1, isMobile and -140 or -115)
+    self.contentArea.Position = UDim2.new(0, 5, 0, isMobile and 140 or 110)
     self.contentArea.BackgroundTransparency = 1
     self.contentArea.BorderSizePixel = 0
     self.contentArea.Parent = self.mainFrame
@@ -596,23 +613,19 @@ end
 function UISystem:CreateTabButton(name, icon, order)
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Tab"
-    btn.Size = UDim2.new(1, -10, 0, 40)
+    btn.Size = UDim2.new(0, isMobile and 100 : 80, 1, isMobile and -10 or -5)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    btn.Text = icon .. " " .. name
+    btn.Text = icon .. "\n" .. name
     btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 14
+    btn.TextSize = isMobile and 14 or 12
     btn.Font = Enum.Font.Gotham
     btn.BorderSizePixel = 0
     btn.LayoutOrder = order
-    btn.Parent = self.sidebar
+    btn.Parent = self.tabContainer
     
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 6)
     btnCorner.Parent = btn
-    
-    local btnPadding = Instance.new("UIPadding")
-    btnPadding.PaddingLeft = UDim.new(0, 10)
-    btnPadding.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
         self:SwitchTab(name)
@@ -624,16 +637,15 @@ end
 function UISystem:CreateScrollingContent(tabName)
     local scroll = Instance.new("ScrollingFrame")
     scroll.Name = tabName .. "Content"
-    scroll.Size = UDim2.new(1, -20, 1, -20)
-    scroll.Position = UDim2.new(0, 10, 0, 10)
+    scroll.Size = UDim2.new(1, 0, 1, 0)
     scroll.BackgroundTransparency = 1
     scroll.BorderSizePixel = 0
-    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarThickness = 6
     scroll.Visible = false
     scroll.Parent = self.contentArea
     
     local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 10)
+    listLayout.Padding = UDim.new(0, isMobile and 15 or 10)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = scroll
     
@@ -642,7 +654,7 @@ end
 
 function UISystem:CreateToggleOption(parent, name, icon, aiModule)
     local option = Instance.new("Frame")
-    option.Size = UDim2.new(1, 0, 0, 50)
+    option.Size = UDim2.new(1, 0, 0, isMobile and 70 or 50)
     option.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     option.BorderSizePixel = 0
     option.Parent = parent
@@ -652,23 +664,25 @@ function UISystem:CreateToggleOption(parent, name, icon, aiModule)
     optionCorner.Parent = option
     
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -80, 1, 0)
+    label.Size = UDim2.new(1, isMobile and -100 or -80, 1, 0)
     label.Position = UDim2.new(0, 15, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = icon .. " " .. name
     label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    label.TextSize = 14
+    label.TextSize = isMobile and 16 or 14
     label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextWrapped = true
     label.Parent = option
     
     local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, 60, 0, 30)
-    toggle.Position = UDim2.new(1, -70, 0.5, -15)
+    toggle.Size = UDim2.new(0, isMobile and 80 or 60, 0, isMobile and 40 or 30)
+    toggle.Position = UDim2.new(1, isMobile and -85 or -70, 0.5, 0)
+    toggle.AnchorPoint = Vector2.new(0, 0.5)
     toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
     toggle.Text = "OFF"
     toggle.TextColor3 = Color3.fromRGB(180, 180, 180)
-    toggle.TextSize = 12
+    toggle.TextSize = isMobile and 14 or 12
     toggle.Font = Enum.Font.GothamBold
     toggle.BorderSizePixel = 0
     toggle.Parent = option
@@ -683,12 +697,12 @@ function UISystem:CreateToggleOption(parent, name, icon, aiModule)
                 aiModule:start()
                 toggle.Text = "ON"
                 toggle.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-                self:ShowNotification("✅ " .. name .. " 有効化", "success")
+                self:ShowNotification("✅ " .. name, "success")
             else
                 aiModule:stop()
                 toggle.Text = "OFF"
                 toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-                self:ShowNotification("❌ " .. name .. " 無効化", "info")
+                self:ShowNotification("❌ " .. name, "info")
             end
         end
     end)
@@ -697,7 +711,7 @@ end
 function UISystem:CreateTabs()
     self:CreateTabButton("Home", "🏠", 1)
     self:CreateTabButton("Combat", "⚔️", 2)
-    self:CreateTabButton("Movement", "🏃", 3)
+    self:CreateTabButton("Move", "🏃", 3)
     self:CreateTabButton("Vision", "👁️", 4)
     self:CreateTabButton("Auto", "🤖", 5)
     self:CreateTabButton("Stats", "📊", 6)
@@ -710,12 +724,17 @@ function UISystem:CreateTabs()
     self:CreateStatsTab()
 end
 
+-- Part 3 終了
+-- 次に「パート4」と入力してください
+-- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 4/4 (最終)
+-- Part 3 の続きです
+
 function UISystem:CreateHomeTab()
     local content = self:CreateScrollingContent("Home")
     content.Visible = true
     
     local welcome = Instance.new("Frame")
-    welcome.Size = UDim2.new(1, 0, 0, 120)
+    welcome.Size = UDim2.new(1, 0, 0, isMobile and 150 : 120)
     welcome.BackgroundColor3 = Color3.fromRGB(40, 40, 100)
     welcome.BorderSizePixel = 0
     welcome.Parent = content
@@ -728,9 +747,9 @@ function UISystem:CreateHomeTab()
     welcomeText.Size = UDim2.new(1, -20, 1, -20)
     welcomeText.Position = UDim2.new(0, 10, 0, 10)
     welcomeText.BackgroundTransparency = 1
-    welcomeText.Text = "🚀 AI Control Hub へようこそ！\n\n13個以上のAI機能搭載\n左のタブから機能を選択\n\n[Right Ctrl] でUI開閉"
+    welcomeText.Text = "🚀 AI Control Hub\n\n13個以上のAI機能搭載\n上のタブから選択\n\n" .. (isMobile and "画面下のボタンで開閉" or "[Right Ctrl]で開閉")
     welcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    welcomeText.TextSize = 14
+    welcomeText.TextSize = isMobile and 16 or 14
     welcomeText.Font = Enum.Font.Gotham
     welcomeText.TextWrapped = true
     welcomeText.Parent = welcome
@@ -739,14 +758,14 @@ end
 function UISystem:CreateCombatTab()
     local content = self:CreateScrollingContent("Combat")
     self:CreateToggleOption(content, "自動照準", "🎯", AIModules.AutoAim)
-    self:CreateToggleOption(content, "敵検出システム", "👥", AIModules.EnemyDetector)
+    self:CreateToggleOption(content, "敵検出", "👥", AIModules.EnemyDetector)
     self:CreateToggleOption(content, "自動回避", "🛡️", AIModules.AutoDodge)
     self:CreateToggleOption(content, "ウォールハック", "🔍", AIModules.Wallhack)
     self:CreateToggleOption(content, "無敵モード", "⭐", AIModules.GodMode)
 end
 
 function UISystem:CreateMovementTab()
-    local content = self:CreateScrollingContent("Movement")
+    local content = self:CreateScrollingContent("Move")
     self:CreateToggleOption(content, "スピードブースト", "⚡", AIModules.SpeedBoost)
     self:CreateToggleOption(content, "無限ジャンプ", "🦘", AIModules.InfiniteJump)
     self:CreateToggleOption(content, "フライモード", "🕊️", AIModules.Fly)
@@ -760,21 +779,16 @@ end
 
 function UISystem:CreateAutoTab()
     local content = self:CreateScrollingContent("Auto")
-    self:CreateToggleOption(content, "自動体力回復", "❤️", AIModules.AutoHeal)
+    self:CreateToggleOption(content, "自動回復", "❤️", AIModules.AutoHeal)
     self:CreateToggleOption(content, "自動収集", "💰", AIModules.AutoCollect)
 end
-
--- Part 3 終了
--- 次に Part 4 を要求してください
--- AI搭載 高度カスタムUIシステム Part 4/4 (最終)
--- Part 3 の続きです
 
 function UISystem:CreateStatsTab()
     local content = self:CreateScrollingContent("Stats")
     AIModules.ResourceMonitor:start()
     
     local statsPanel = Instance.new("Frame")
-    statsPanel.Size = UDim2.new(1, 0, 0, 180)
+    statsPanel.Size = UDim2.new(1, 0, 0, isMobile and 220 : 180)
     statsPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     statsPanel.BorderSizePixel = 0
     statsPanel.Parent = content
@@ -784,56 +798,56 @@ function UISystem:CreateStatsTab()
     statsCorner.Parent = statsPanel
     
     local statsTitle = Instance.new("TextLabel")
-    statsTitle.Size = UDim2.new(1, -20, 0, 30)
+    statsTitle.Size = UDim2.new(1, -20, 0, isMobile and 40 : 30)
     statsTitle.Position = UDim2.new(0, 10, 0, 10)
     statsTitle.BackgroundTransparency = 1
     statsTitle.Text = "📊 システム統計"
     statsTitle.TextColor3 = Color3.fromRGB(150, 150, 255)
-    statsTitle.TextSize = 16
+    statsTitle.TextSize = isMobile and 18 : 16
     statsTitle.Font = Enum.Font.GothamBold
     statsTitle.TextXAlignment = Enum.TextXAlignment.Left
     statsTitle.Parent = statsPanel
     
     local fpsLabel = Instance.new("TextLabel")
-    fpsLabel.Size = UDim2.new(1, -20, 0, 25)
-    fpsLabel.Position = UDim2.new(0, 10, 0, 45)
+    fpsLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
+    fpsLabel.Position = UDim2.new(0, 10, 0, isMobile and 55 : 45)
     fpsLabel.BackgroundTransparency = 1
     fpsLabel.Text = "FPS: 60"
     fpsLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-    fpsLabel.TextSize = 14
+    fpsLabel.TextSize = isMobile and 16 : 14
     fpsLabel.Font = Enum.Font.Gotham
     fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
     fpsLabel.Parent = statsPanel
     
     local pingLabel = Instance.new("TextLabel")
-    pingLabel.Size = UDim2.new(1, -20, 0, 25)
-    pingLabel.Position = UDim2.new(0, 10, 0, 75)
+    pingLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
+    pingLabel.Position = UDim2.new(0, 10, 0, isMobile and 90 : 75)
     pingLabel.BackgroundTransparency = 1
     pingLabel.Text = "Ping: 0ms"
     pingLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
-    pingLabel.TextSize = 14
+    pingLabel.TextSize = isMobile and 16 : 14
     pingLabel.Font = Enum.Font.Gotham
     pingLabel.TextXAlignment = Enum.TextXAlignment.Left
     pingLabel.Parent = statsPanel
     
     local memoryLabel = Instance.new("TextLabel")
-    memoryLabel.Size = UDim2.new(1, -20, 0, 25)
-    memoryLabel.Position = UDim2.new(0, 10, 0, 105)
+    memoryLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
+    memoryLabel.Position = UDim2.new(0, 10, 0, isMobile and 125 : 105)
     memoryLabel.BackgroundTransparency = 1
     memoryLabel.Text = "メモリ: 0 MB"
     memoryLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
-    memoryLabel.TextSize = 14
+    memoryLabel.TextSize = isMobile and 16 : 14
     memoryLabel.Font = Enum.Font.Gotham
     memoryLabel.TextXAlignment = Enum.TextXAlignment.Left
     memoryLabel.Parent = statsPanel
     
     local playerLabel = Instance.new("TextLabel")
-    playerLabel.Size = UDim2.new(1, -20, 0, 25)
-    playerLabel.Position = UDim2.new(0, 10, 0, 135)
+    playerLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
+    playerLabel.Position = UDim2.new(0, 10, 0, isMobile and 160 : 135)
     playerLabel.BackgroundTransparency = 1
     playerLabel.Text = "プレイヤー: " .. player.Name
     playerLabel.TextColor3 = Color3.fromRGB(255, 150, 255)
-    playerLabel.TextSize = 14
+    playerLabel.TextSize = isMobile and 16 : 14
     playerLabel.Font = Enum.Font.Gotham
     playerLabel.TextXAlignment = Enum.TextXAlignment.Left
     playerLabel.Parent = statsPanel
@@ -858,7 +872,7 @@ function UISystem:SwitchTab(tabName)
         end
     end
     
-    for _, btn in pairs(self.sidebar:GetChildren()) do
+    for _, btn in pairs(self.tabContainer:GetChildren()) do
         if btn:IsA("TextButton") then
             btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
             btn.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -870,7 +884,7 @@ function UISystem:SwitchTab(tabName)
         targetContent.Visible = true
     end
     
-    local targetBtn = self.sidebar:FindFirstChild(tabName .. "Tab")
+    local targetBtn = self.tabContainer:FindFirstChild(tabName .. "Tab")
     if targetBtn then
         targetBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 100)
         targetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -880,8 +894,8 @@ end
 function UISystem:CreateNotificationSystem()
     self.notificationContainer = Instance.new("Frame")
     self.notificationContainer.Name = "Notifications"
-    self.notificationContainer.Size = UDim2.new(0, 300, 1, -20)
-    self.notificationContainer.Position = UDim2.new(1, -310, 0, 10)
+    self.notificationContainer.Size = UDim2.new(isMobile and 0.9 or 0.3, 0, 1, -20)
+    self.notificationContainer.Position = UDim2.new(isMobile and 0.05 or 0.68, 0, 0, 10)
     self.notificationContainer.BackgroundTransparency = 1
     self.notificationContainer.Parent = self.screenGui
     
@@ -894,7 +908,7 @@ end
 
 function UISystem:ShowNotification(message, type)
     local notif = Instance.new("Frame")
-    notif.Size = UDim2.new(1, 0, 0, 60)
+    notif.Size = UDim2.new(1, 0, 0, isMobile and 70 : 60)
     notif.BackgroundColor3 = type == "success" and Color3.fromRGB(76, 175, 80) or 
                              type == "error" and Color3.fromRGB(244, 67, 54) or 
                              Color3.fromRGB(33, 150, 243)
@@ -911,7 +925,7 @@ function UISystem:ShowNotification(message, type)
     text.BackgroundTransparency = 1
     text.Text = message
     text.TextColor3 = Color3.fromRGB(255, 255, 255)
-    text.TextSize = 14
+    text.TextSize = isMobile and 16 : 14
     text.Font = Enum.Font.Gotham
     text.TextWrapped = true
     text.TextXAlignment = Enum.TextXAlignment.Left
@@ -933,22 +947,43 @@ function UISystem:Toggle()
     self.mainFrame.Visible = self.isOpen
     
     if self.isOpen then
-        self.mainFrame.Position = UDim2.new(0.5, -275, 1, 0)
+        self.mainFrame.Position = UDim2.new(0.5, 0, 1.5, 0)
         local tween = TweenService:Create(self.mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -275, 0.5, -200)
+            Position = UDim2.new(0.5, 0, 0.5, 0)
         })
         tween:Play()
     end
 end
 
-function UISystem:SetupToggle()
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
+function UISystem:CreateMobileToggleButton()
+    if isMobile then
+        local toggleBtn = Instance.new("TextButton")
+        toggleBtn.Name = "ToggleButton"
+        toggleBtn.Size = UDim2.new(0, 70, 0, 70)
+        toggleBtn.Position = UDim2.new(1, -80, 1, -80)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+        toggleBtn.Text = "🚀"
+        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleBtn.TextSize = 30
+        toggleBtn.Font = Enum.Font.GothamBold
+        toggleBtn.BorderSizePixel = 0
+        toggleBtn.Parent = self.screenGui
         
-        if input.KeyCode == Enum.KeyCode.RightControl then
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(1, 0)
+        btnCorner.Parent = toggleBtn
+        
+        toggleBtn.MouseButton1Click:Connect(function()
             self:Toggle()
-        end
-    end)
+        end)
+    else
+        UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed then return end
+            if input.KeyCode == Enum.KeyCode.RightControl then
+                self:Toggle()
+            end
+        end)
+    end
 end
 
 -- ========================
@@ -958,16 +993,20 @@ end
 local uiSystem = UISystem.new()
 
 task.wait(1)
-uiSystem:ShowNotification("✨ AI Control Hub が起動しました！", "success")
+uiSystem:ShowNotification("✨ AI Hub 起動！", "success")
 
 task.wait(2)
-uiSystem:ShowNotification("ℹ️ [Right Ctrl] でUIを開閉", "info")
+if isMobile then
+    uiSystem:ShowNotification("📱 画面右下のボタンでUI開閉", "info")
+else
+    uiSystem:ShowNotification("⌨️ [Right Ctrl]でUI開閉", "info")
+end
 
 task.wait(3)
-uiSystem:ShowNotification("🎯 13個以上のAI機能が利用可能です！", "success")
+uiSystem:ShowNotification("🎯 13個のAI機能搭載", "success")
 
-print("AI Control Hub システムが正常にロードされました")
-print("合計AI機能数: 13個以上")
-print("[Right Ctrl] キーでUIを開閉できます")
+print("AI Control Hub (スマホ対応版) ロード完了")
+print("AI機能数: 13個")
+print(isMobile and "モバイルモード有効" or "PCモード有効")
 
--- Part 4 終了 - 全コード完成！
+-- Part 4 終了 - 全コード完成！スマホ対応版！
