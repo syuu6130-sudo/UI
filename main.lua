@@ -1,4 +1,4 @@
--- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 1/4
+-- AI搭載 Orion Library UIシステム - Part 1/2
 -- LocalScript (StarterPlayer > StarterPlayerScripts に配置)
 
 local Players = game:GetService("Players")
@@ -8,13 +8,12 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 
--- デバイス検出
-local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+-- Orion Library の読み込み
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 -- ========================
--- AI機能モジュール (13個以上搭載)
+-- AI機能モジュール (13個搭載)
 -- ========================
 
 local AIModules = {}
@@ -193,11 +192,6 @@ AIModules.VisionEnhancer = {
     end
 }
 
--- Part 1 終了
--- 次に「パート2」と入力してください
--- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 2/4
--- Part 1 の続きです
-
 -- 7. AI自動収集システム
 AIModules.AutoCollect = {
     enabled = false,
@@ -306,6 +300,11 @@ AIModules.Fly = {
         end
     end
 }
+
+-- Part 1 終了
+-- 次に「パート2」と入力してください
+-- AI搭載 Orion Library UIシステム - Part 2/2 (最終)
+-- Part 1 の続きです
 
 -- 9. AI自動回避システム
 AIModules.AutoDodge = {
@@ -478,535 +477,343 @@ AIModules.GodMode = {
     end
 }
 
--- Part 2 終了
--- 次に「パート3」と入力してください
--- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 3/4
--- Part 2 の続きです
-
 -- ========================
--- UIシステム (スマホ対応)
+-- Orion Library UI構築
 -- ========================
 
-local UISystem = {}
-UISystem.__index = UISystem
+local Window = OrionLib:MakeWindow({
+    Name = "🚀 AI Control Hub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "AIHubConfig",
+    IntroEnabled = true,
+    IntroText = "AI Hub Loading..."
+})
 
-function UISystem.new()
-    local self = setmetatable({}, UISystem)
-    
-    self.screenGui = Instance.new("ScreenGui")
-    self.screenGui.Name = "RayfieldUI"
-    self.screenGui.ResetOnSpawn = false
-    self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    self.screenGui.Parent = playerGui
-    
-    self.currentTab = "Home"
-    self.isOpen = false
-    
-    self:CreateMainWindow()
-    self:CreateTabs()
-    self:CreateNotificationSystem()
-    self:CreateMobileToggleButton()
-    
-    return self
-end
+-- ホームタブ
+local HomeTab = Window:MakeTab({
+    Name = "🏠 ホーム",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-function UISystem:CreateMainWindow()
-    -- スマホ対応サイズ
-    local windowWidth = isMobile and 0.95 or 0.4
-    local windowHeight = isMobile and 0.7 or 0.5
-    
-    self.mainFrame = Instance.new("Frame")
-    self.mainFrame.Name = "MainWindow"
-    self.mainFrame.Size = UDim2.new(windowWidth, 0, windowHeight, 0)
-    self.mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    self.mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    self.mainFrame.BorderSizePixel = 0
-    self.mainFrame.Visible = false
-    self.mainFrame.Parent = self.screenGui
-    
-    local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, 12)
-    mainCorner.Parent = self.mainFrame
-    
-    local border = Instance.new("UIStroke")
-    border.Color = Color3.fromRGB(100, 100, 255)
-    border.Thickness = 2
-    border.Transparency = 0.5
-    border.Parent = self.mainFrame
-    
-    -- ヘッダー
-    local header = Instance.new("Frame")
-    header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, isMobile and 60 or 50)
-    header.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    header.BorderSizePixel = 0
-    header.Parent = self.mainFrame
-    
-    local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, 12)
-    headerCorner.Parent = header
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(0.7, 0, 1, 0)
-    title.Position = UDim2.new(0, 15, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "🚀 AI Hub"
-    title.TextColor3 = Color3.fromRGB(150, 150, 255)
-    title.TextSize = isMobile and 20 or 18
-    title.Font = Enum.Font.GothamBold
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Parent = header
-    
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, isMobile and 50 or 35, 0, isMobile and 50 or 35)
-    closeBtn.Position = UDim2.new(1, isMobile and -55 or -45, 0.5, 0)
-    closeBtn.AnchorPoint = Vector2.new(0, 0.5)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextSize = isMobile and 22 or 18
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.BorderSizePixel = 0
-    closeBtn.Parent = header
-    
-    local closeBtnCorner = Instance.new("UICorner")
-    closeBtnCorner.CornerRadius = UDim.new(0, 8)
-    closeBtnCorner.Parent = closeBtn
-    
-    closeBtn.MouseButton1Click:Connect(function()
-        self:Toggle()
-    end)
-    
-    -- タブボタン (横並び - スマホ対応)
-    self.tabContainer = Instance.new("ScrollingFrame")
-    self.tabContainer.Name = "TabContainer"
-    self.tabContainer.Size = UDim2.new(1, -10, 0, isMobile and 70 or 50)
-    self.tabContainer.Position = UDim2.new(0, 5, 0, isMobile and 65 or 55)
-    self.tabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    self.tabContainer.BorderSizePixel = 0
-    self.tabContainer.ScrollBarThickness = 4
-    self.tabContainer.CanvasSize = UDim2.new(2, 0, 0, 0)
-    self.tabContainer.ScrollingDirection = Enum.ScrollingDirection.X
-    self.tabContainer.Parent = self.mainFrame
-    
-    local tabCorner = Instance.new("UICorner")
-    tabCorner.CornerRadius = UDim.new(0, 8)
-    tabCorner.Parent = self.tabContainer
-    
-    local tabList = Instance.new("UIListLayout")
-    tabList.FillDirection = Enum.FillDirection.Horizontal
-    tabList.Padding = UDim.new(0, 5)
-    tabList.SortOrder = Enum.SortOrder.LayoutOrder
-    tabList.Parent = self.tabContainer
-    
-    -- コンテンツエリア
-    self.contentArea = Instance.new("Frame")
-    self.contentArea.Name = "ContentArea"
-    self.contentArea.Size = UDim2.new(1, -10, 1, isMobile and -140 or -115)
-    self.contentArea.Position = UDim2.new(0, 5, 0, isMobile and 140 or 110)
-    self.contentArea.BackgroundTransparency = 1
-    self.contentArea.BorderSizePixel = 0
-    self.contentArea.Parent = self.mainFrame
-end
+HomeTab:AddParagraph("ようこそ!", "AI Control Hubへようこそ!\n13個以上のAI機能を搭載しています。")
+HomeTab:AddParagraph("使い方", "各タブから機能を選択してトグルをONにしてください。")
+HomeTab:AddLabel("プレイヤー: " .. player.Name)
 
-function UISystem:CreateTabButton(name, icon, order)
-    local btn = Instance.new("TextButton")
-    btn.Name = name .. "Tab"
-    btn.Size = UDim2.new(0, isMobile and 100 : 80, 1, isMobile and -10 or -5)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    btn.Text = icon .. "\n" .. name
-    btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-    btn.TextSize = isMobile and 14 or 12
-    btn.Font = Enum.Font.Gotham
-    btn.BorderSizePixel = 0
-    btn.LayoutOrder = order
-    btn.Parent = self.tabContainer
-    
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
-    btnCorner.Parent = btn
-    
-    btn.MouseButton1Click:Connect(function()
-        self:SwitchTab(name)
-    end)
-    
-    return btn
-end
+-- コンバットタブ
+local CombatTab = Window:MakeTab({
+    Name = "⚔️ 戦闘",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-function UISystem:CreateScrollingContent(tabName)
-    local scroll = Instance.new("ScrollingFrame")
-    scroll.Name = tabName .. "Content"
-    scroll.Size = UDim2.new(1, 0, 1, 0)
-    scroll.BackgroundTransparency = 1
-    scroll.BorderSizePixel = 0
-    scroll.ScrollBarThickness = 6
-    scroll.Visible = false
-    scroll.Parent = self.contentArea
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, isMobile and 15 or 10)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Parent = scroll
-    
-    return scroll
-end
-
-function UISystem:CreateToggleOption(parent, name, icon, aiModule)
-    local option = Instance.new("Frame")
-    option.Size = UDim2.new(1, 0, 0, isMobile and 70 or 50)
-    option.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    option.BorderSizePixel = 0
-    option.Parent = parent
-    
-    local optionCorner = Instance.new("UICorner")
-    optionCorner.CornerRadius = UDim.new(0, 8)
-    optionCorner.Parent = option
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, isMobile and -100 or -80, 1, 0)
-    label.Position = UDim2.new(0, 15, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = icon .. " " .. name
-    label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    label.TextSize = isMobile and 16 or 14
-    label.Font = Enum.Font.Gotham
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextWrapped = true
-    label.Parent = option
-    
-    local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, isMobile and 80 or 60, 0, isMobile and 40 or 30)
-    toggle.Position = UDim2.new(1, isMobile and -85 or -70, 0.5, 0)
-    toggle.AnchorPoint = Vector2.new(0, 0.5)
-    toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-    toggle.Text = "OFF"
-    toggle.TextColor3 = Color3.fromRGB(180, 180, 180)
-    toggle.TextSize = isMobile and 14 or 12
-    toggle.Font = Enum.Font.GothamBold
-    toggle.BorderSizePixel = 0
-    toggle.Parent = option
-    
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 6)
-    toggleCorner.Parent = toggle
-    
-    toggle.MouseButton1Click:Connect(function()
-        if aiModule then
-            if toggle.Text == "OFF" then
-                aiModule:start()
-                toggle.Text = "ON"
-                toggle.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-                self:ShowNotification("✅ " .. name, "success")
-            else
-                aiModule:stop()
-                toggle.Text = "OFF"
-                toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-                self:ShowNotification("❌ " .. name, "info")
-            end
+CombatTab:AddToggle({
+    Name = "🎯 自動照準",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.AutoAim:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 自動照準",
+                Content = "自動照準が有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.AutoAim:stop()
         end
-    end)
-end
+    end    
+})
 
-function UISystem:CreateTabs()
-    self:CreateTabButton("Home", "🏠", 1)
-    self:CreateTabButton("Combat", "⚔️", 2)
-    self:CreateTabButton("Move", "🏃", 3)
-    self:CreateTabButton("Vision", "👁️", 4)
-    self:CreateTabButton("Auto", "🤖", 5)
-    self:CreateTabButton("Stats", "📊", 6)
-    
-    self:CreateHomeTab()
-    self:CreateCombatTab()
-    self:CreateMovementTab()
-    self:CreateVisionTab()
-    self:CreateAutoTab()
-    self:CreateStatsTab()
-end
-
--- Part 3 終了
--- 次に「パート4」と入力してください
--- AI搭載 高度カスタムUIシステム - スマホ対応版 Part 4/4 (最終)
--- Part 3 の続きです
-
-function UISystem:CreateHomeTab()
-    local content = self:CreateScrollingContent("Home")
-    content.Visible = true
-    
-    local welcome = Instance.new("Frame")
-    welcome.Size = UDim2.new(1, 0, 0, isMobile and 150 : 120)
-    welcome.BackgroundColor3 = Color3.fromRGB(40, 40, 100)
-    welcome.BorderSizePixel = 0
-    welcome.Parent = content
-    
-    local welcomeCorner = Instance.new("UICorner")
-    welcomeCorner.CornerRadius = UDim.new(0, 10)
-    welcomeCorner.Parent = welcome
-    
-    local welcomeText = Instance.new("TextLabel")
-    welcomeText.Size = UDim2.new(1, -20, 1, -20)
-    welcomeText.Position = UDim2.new(0, 10, 0, 10)
-    welcomeText.BackgroundTransparency = 1
-    welcomeText.Text = "🚀 AI Control Hub\n\n13個以上のAI機能搭載\n上のタブから選択\n\n" .. (isMobile and "画面下のボタンで開閉" or "[Right Ctrl]で開閉")
-    welcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    welcomeText.TextSize = isMobile and 16 or 14
-    welcomeText.Font = Enum.Font.Gotham
-    welcomeText.TextWrapped = true
-    welcomeText.Parent = welcome
-end
-
-function UISystem:CreateCombatTab()
-    local content = self:CreateScrollingContent("Combat")
-    self:CreateToggleOption(content, "自動照準", "🎯", AIModules.AutoAim)
-    self:CreateToggleOption(content, "敵検出", "👥", AIModules.EnemyDetector)
-    self:CreateToggleOption(content, "自動回避", "🛡️", AIModules.AutoDodge)
-    self:CreateToggleOption(content, "ウォールハック", "🔍", AIModules.Wallhack)
-    self:CreateToggleOption(content, "無敵モード", "⭐", AIModules.GodMode)
-end
-
-function UISystem:CreateMovementTab()
-    local content = self:CreateScrollingContent("Move")
-    self:CreateToggleOption(content, "スピードブースト", "⚡", AIModules.SpeedBoost)
-    self:CreateToggleOption(content, "無限ジャンプ", "🦘", AIModules.InfiniteJump)
-    self:CreateToggleOption(content, "フライモード", "🕊️", AIModules.Fly)
-    self:CreateToggleOption(content, "自動ジャンプ", "🎪", AIModules.AutoJump)
-end
-
-function UISystem:CreateVisionTab()
-    local content = self:CreateScrollingContent("Vision")
-    self:CreateToggleOption(content, "視界強化", "👁️", AIModules.VisionEnhancer)
-end
-
-function UISystem:CreateAutoTab()
-    local content = self:CreateScrollingContent("Auto")
-    self:CreateToggleOption(content, "自動回復", "❤️", AIModules.AutoHeal)
-    self:CreateToggleOption(content, "自動収集", "💰", AIModules.AutoCollect)
-end
-
-function UISystem:CreateStatsTab()
-    local content = self:CreateScrollingContent("Stats")
-    AIModules.ResourceMonitor:start()
-    
-    local statsPanel = Instance.new("Frame")
-    statsPanel.Size = UDim2.new(1, 0, 0, isMobile and 220 : 180)
-    statsPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    statsPanel.BorderSizePixel = 0
-    statsPanel.Parent = content
-    
-    local statsCorner = Instance.new("UICorner")
-    statsCorner.CornerRadius = UDim.new(0, 10)
-    statsCorner.Parent = statsPanel
-    
-    local statsTitle = Instance.new("TextLabel")
-    statsTitle.Size = UDim2.new(1, -20, 0, isMobile and 40 : 30)
-    statsTitle.Position = UDim2.new(0, 10, 0, 10)
-    statsTitle.BackgroundTransparency = 1
-    statsTitle.Text = "📊 システム統計"
-    statsTitle.TextColor3 = Color3.fromRGB(150, 150, 255)
-    statsTitle.TextSize = isMobile and 18 : 16
-    statsTitle.Font = Enum.Font.GothamBold
-    statsTitle.TextXAlignment = Enum.TextXAlignment.Left
-    statsTitle.Parent = statsPanel
-    
-    local fpsLabel = Instance.new("TextLabel")
-    fpsLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
-    fpsLabel.Position = UDim2.new(0, 10, 0, isMobile and 55 : 45)
-    fpsLabel.BackgroundTransparency = 1
-    fpsLabel.Text = "FPS: 60"
-    fpsLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-    fpsLabel.TextSize = isMobile and 16 : 14
-    fpsLabel.Font = Enum.Font.Gotham
-    fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
-    fpsLabel.Parent = statsPanel
-    
-    local pingLabel = Instance.new("TextLabel")
-    pingLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
-    pingLabel.Position = UDim2.new(0, 10, 0, isMobile and 90 : 75)
-    pingLabel.BackgroundTransparency = 1
-    pingLabel.Text = "Ping: 0ms"
-    pingLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
-    pingLabel.TextSize = isMobile and 16 : 14
-    pingLabel.Font = Enum.Font.Gotham
-    pingLabel.TextXAlignment = Enum.TextXAlignment.Left
-    pingLabel.Parent = statsPanel
-    
-    local memoryLabel = Instance.new("TextLabel")
-    memoryLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
-    memoryLabel.Position = UDim2.new(0, 10, 0, isMobile and 125 : 105)
-    memoryLabel.BackgroundTransparency = 1
-    memoryLabel.Text = "メモリ: 0 MB"
-    memoryLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
-    memoryLabel.TextSize = isMobile and 16 : 14
-    memoryLabel.Font = Enum.Font.Gotham
-    memoryLabel.TextXAlignment = Enum.TextXAlignment.Left
-    memoryLabel.Parent = statsPanel
-    
-    local playerLabel = Instance.new("TextLabel")
-    playerLabel.Size = UDim2.new(1, -20, 0, isMobile and 30 : 25)
-    playerLabel.Position = UDim2.new(0, 10, 0, isMobile and 160 : 135)
-    playerLabel.BackgroundTransparency = 1
-    playerLabel.Text = "プレイヤー: " .. player.Name
-    playerLabel.TextColor3 = Color3.fromRGB(255, 150, 255)
-    playerLabel.TextSize = isMobile and 16 : 14
-    playerLabel.Font = Enum.Font.Gotham
-    playerLabel.TextXAlignment = Enum.TextXAlignment.Left
-    playerLabel.Parent = statsPanel
-    
-    spawn(function()
-        while wait(0.5) do
-            if AIModules.ResourceMonitor.enabled then
-                fpsLabel.Text = "FPS: " .. AIModules.ResourceMonitor.stats.fps
-                pingLabel.Text = "Ping: " .. AIModules.ResourceMonitor.stats.ping .. "ms"
-                memoryLabel.Text = "メモリ: " .. AIModules.ResourceMonitor.stats.memory .. " MB"
-            end
+CombatTab:AddToggle({
+    Name = "👥 敵検出",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.EnemyDetector:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 敵検出",
+                Content = "敵検出システムが有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.EnemyDetector:stop()
         end
-    end)
-end
+    end    
+})
 
-function UISystem:SwitchTab(tabName)
-    self.currentTab = tabName
-    
-    for _, child in pairs(self.contentArea:GetChildren()) do
-        if child:IsA("ScrollingFrame") then
-            child.Visible = false
+CombatTab:AddToggle({
+    Name = "🛡️ 自動回避",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.AutoDodge:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 自動回避",
+                Content = "自動回避が有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.AutoDodge:stop()
+        end
+    end    
+})
+
+CombatTab:AddToggle({
+    Name = "🔍 ウォールハック",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.Wallhack:start()
+            OrionLib:MakeNotification({
+                Name = "✅ ウォールハック",
+                Content = "ウォールハックが有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.Wallhack:stop()
+        end
+    end    
+})
+
+CombatTab:AddToggle({
+    Name = "⭐ 無敵モード",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.GodMode:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 無敵モード",
+                Content = "無敵モードが有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.GodMode:stop()
+        end
+    end    
+})
+
+-- 移動タブ
+local MovementTab = Window:MakeTab({
+    Name = "🏃 移動",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MovementTab:AddToggle({
+    Name = "⚡ スピードブースト",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.SpeedBoost:start()
+            OrionLib:MakeNotification({
+                Name = "✅ スピードブースト",
+                Content = "スピードブーストが有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.SpeedBoost:stop()
+        end
+    end    
+})
+
+MovementTab:AddToggle({
+    Name = "🦘 無限ジャンプ",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.InfiniteJump:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 無限ジャンプ",
+                Content = "無限ジャンプが有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.InfiniteJump:stop()
+        end
+    end    
+})
+
+MovementTab:AddToggle({
+    Name = "🕊️ フライモード",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.Fly:start()
+            OrionLib:MakeNotification({
+                Name = "✅ フライモード",
+                Content = "フライモードが有効になりました (WASD + Space/Shift)",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.Fly:stop()
+        end
+    end    
+})
+
+MovementTab:AddToggle({
+    Name = "🎪 自動ジャンプ",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.AutoJump:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 自動ジャンプ",
+                Content = "自動ジャンプが有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.AutoJump:stop()
+        end
+    end    
+})
+
+-- 視界タブ
+local VisionTab = Window:MakeTab({
+    Name = "👁️ 視界",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+VisionTab:AddToggle({
+    Name = "👁️ 視界強化",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.VisionEnhancer:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 視界強化",
+                Content = "視界強化が有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.VisionEnhancer:stop()
+        end
+    end    
+})
+
+-- 自動化タブ
+local AutoTab = Window:MakeTab({
+    Name = "🤖 自動化",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AutoTab:AddToggle({
+    Name = "❤️ 自動回復",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.AutoHeal:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 自動回復",
+                Content = "自動回復が有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.AutoHeal:stop()
+        end
+    end    
+})
+
+AutoTab:AddToggle({
+    Name = "💰 自動収集",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            AIModules.AutoCollect:start()
+            OrionLib:MakeNotification({
+                Name = "✅ 自動収集",
+                Content = "自動収集が有効になりました",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            AIModules.AutoCollect:stop()
+        end
+    end    
+})
+
+-- 統計タブ
+local StatsTab = Window:MakeTab({
+    Name = "📊 統計",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AIModules.ResourceMonitor:start()
+
+local fpsLabel = StatsTab:AddLabel("FPS: 計測中...")
+local pingLabel = StatsTab:AddLabel("Ping: 計測中...")
+local memoryLabel = StatsTab:AddLabel("メモリ: 計測中...")
+
+spawn(function()
+    while wait(1) do
+        if AIModules.ResourceMonitor.enabled then
+            fpsLabel:Set("FPS: " .. AIModules.ResourceMonitor.stats.fps)
+            pingLabel:Set("Ping: " .. AIModules.ResourceMonitor.stats.ping .. "ms")
+            memoryLabel:Set("メモリ: " .. AIModules.ResourceMonitor.stats.memory .. " MB")
         end
     end
-    
-    for _, btn in pairs(self.tabContainer:GetChildren()) do
-        if btn:IsA("TextButton") then
-            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-            btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-        end
-    end
-    
-    local targetContent = self.contentArea:FindFirstChild(tabName .. "Content")
-    if targetContent then
-        targetContent.Visible = true
-    end
-    
-    local targetBtn = self.tabContainer:FindFirstChild(tabName .. "Tab")
-    if targetBtn then
-        targetBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 100)
-        targetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    end
-end
+end)
 
-function UISystem:CreateNotificationSystem()
-    self.notificationContainer = Instance.new("Frame")
-    self.notificationContainer.Name = "Notifications"
-    self.notificationContainer.Size = UDim2.new(isMobile and 0.9 or 0.3, 0, 1, -20)
-    self.notificationContainer.Position = UDim2.new(isMobile and 0.05 or 0.68, 0, 0, 10)
-    self.notificationContainer.BackgroundTransparency = 1
-    self.notificationContainer.Parent = self.screenGui
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 10)
-    listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Parent = self.notificationContainer
-end
+StatsTab:AddParagraph("システム情報", "リアルタイムでパフォーマンスを監視します")
 
-function UISystem:ShowNotification(message, type)
-    local notif = Instance.new("Frame")
-    notif.Size = UDim2.new(1, 0, 0, isMobile and 70 : 60)
-    notif.BackgroundColor3 = type == "success" and Color3.fromRGB(76, 175, 80) or 
-                             type == "error" and Color3.fromRGB(244, 67, 54) or 
-                             Color3.fromRGB(33, 150, 243)
-    notif.BorderSizePixel = 0
-    notif.Parent = self.notificationContainer
-    
-    local notifCorner = Instance.new("UICorner")
-    notifCorner.CornerRadius = UDim.new(0, 8)
-    notifCorner.Parent = notif
-    
-    local text = Instance.new("TextLabel")
-    text.Size = UDim2.new(1, -20, 1, 0)
-    text.Position = UDim2.new(0, 10, 0, 0)
-    text.BackgroundTransparency = 1
-    text.Text = message
-    text.TextColor3 = Color3.fromRGB(255, 255, 255)
-    text.TextSize = isMobile and 16 : 14
-    text.Font = Enum.Font.Gotham
-    text.TextWrapped = true
-    text.TextXAlignment = Enum.TextXAlignment.Left
-    text.Parent = notif
-    
-    notif.Position = UDim2.new(1, 20, 0, 0)
-    local tweenIn = TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(0, 0, 0, 0)})
-    tweenIn:Play()
-    
-    task.wait(3)
-    local tweenOut = TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, 20, 0, 0)})
-    tweenOut:Play()
-    tweenOut.Completed:Wait()
-    notif:Destroy()
-end
+-- 設定タブ
+local SettingsTab = Window:MakeTab({
+    Name = "⚙️ 設定",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-function UISystem:Toggle()
-    self.isOpen = not self.isOpen
-    self.mainFrame.Visible = self.isOpen
-    
-    if self.isOpen then
-        self.mainFrame.Position = UDim2.new(0.5, 0, 1.5, 0)
-        local tween = TweenService:Create(self.mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, 0, 0.5, 0)
+SettingsTab:AddButton({
+    Name = "🔄 UIを再読み込み",
+    Callback = function()
+        OrionLib:MakeNotification({
+            Name = "🔄 再読み込み",
+            Content = "UIを再読み込みしています...",
+            Image = "rbxassetid://4483345998",
+            Time = 2
         })
-        tween:Play()
-    end
-end
+        wait(1)
+        OrionLib:Destroy()
+        wait(0.5)
+        loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+    end    
+})
 
-function UISystem:CreateMobileToggleButton()
-    if isMobile then
-        local toggleBtn = Instance.new("TextButton")
-        toggleBtn.Name = "ToggleButton"
-        toggleBtn.Size = UDim2.new(0, 70, 0, 70)
-        toggleBtn.Position = UDim2.new(1, -80, 1, -80)
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
-        toggleBtn.Text = "🚀"
-        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        toggleBtn.TextSize = 30
-        toggleBtn.Font = Enum.Font.GothamBold
-        toggleBtn.BorderSizePixel = 0
-        toggleBtn.Parent = self.screenGui
-        
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(1, 0)
-        btnCorner.Parent = toggleBtn
-        
-        toggleBtn.MouseButton1Click:Connect(function()
-            self:Toggle()
-        end)
-    else
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if gameProcessed then return end
-            if input.KeyCode == Enum.KeyCode.RightControl then
-                self:Toggle()
-            end
-        end)
-    end
-end
+SettingsTab:AddButton({
+    Name = "❌ UIを閉じる",
+    Callback = function()
+        OrionLib:Destroy()
+    end    
+})
 
--- ========================
--- システム初期化
--- ========================
+-- 初期化完了通知
+OrionLib:MakeNotification({
+    Name = "✨ AI Control Hub",
+    Content = "起動完了! 13個のAI機能が利用可能です",
+    Image = "rbxassetid://4483345998",
+    Time = 5
+})
 
-local uiSystem = UISystem.new()
+OrionLib:Init()
 
-task.wait(1)
-uiSystem:ShowNotification("✨ AI Hub 起動！", "success")
-
-task.wait(2)
-if isMobile then
-    uiSystem:ShowNotification("📱 画面右下のボタンでUI開閉", "info")
-else
-    uiSystem:ShowNotification("⌨️ [Right Ctrl]でUI開閉", "info")
-end
-
-task.wait(3)
-uiSystem:ShowNotification("🎯 13個のAI機能搭載", "success")
-
-print("AI Control Hub (スマホ対応版) ロード完了")
+print("=================================")
+print("AI Control Hub (Orion Library版)")
+print("ロード完了!")
 print("AI機能数: 13個")
-print(isMobile and "モバイルモード有効" or "PCモード有効")
+print("=================================")
 
--- Part 4 終了 - 全コード完成！スマホ対応版！
+-- Part 2 完成! 全コード終了!
