@@ -10,7 +10,7 @@ local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 
 -- Fluent UI の読み込み
-loadstring(game:HttpGet("https://github.com/devforfun/fluent-ui/raw/main/source.lua"))()
+local loadstring(game:HttpGet("https://github.com/devforfun/fluent-ui/raw/main/source.lua"))()
 
 -- ========================
 -- AI機能モジュール (13個搭載)
