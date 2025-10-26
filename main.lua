@@ -1,24 +1,31 @@
--- // KRNL Compatible Rayfield-like UI
--- // by GPT-5
+-- KRNL対応 AI Control Hub (上タブ式Rayfield風)
+-- 完全版 Lua
+
 if not game:IsLoaded() then game.Loaded:Wait() end
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 
--- 既に存在してたら削除（再実行対策）
-local old = CoreGui:FindFirstChild("KRNL_UI")
-if old then old:Destroy() end
+-- 既存UI削除
+local oldUI = CoreGui:FindFirstChild("AIControlHub")
+if oldUI then oldUI:Destroy() end
 
 -- ScreenGui
 local UI = Instance.new("ScreenGui")
-UI.Name = "KRNL_UI"
+UI.Name = "AIControlHub"
 UI.Parent = CoreGui
 UI.ResetOnSpawn = false
 
--- メインウィンドウ
+-- メインフレーム
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -130)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Size = UDim2.new(0,500,0,350)
+MainFrame.Position = UDim2.new(0.5,-250,0.5,-175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -26,144 +33,411 @@ MainFrame.Parent = UI
 
 -- タイトルバー
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-Title.Text = "⚙️ KRNL Rayfield風 UI"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 18
+Title.Size = UDim2.new(1,0,0,40)
+Title.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Title.BackgroundTransparency = 0.1
+Title.Text = "🚀 AI Control Hub"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
 Title.Parent = MainFrame
 
 -- 閉じるボタン
 local Close = Instance.new("TextButton")
-Close.Size = UDim2.new(0, 35, 0, 35)
-Close.Position = UDim2.new(1, -35, 0, 0)
+Close.Size = UDim2.new(0,40,0,40)
+Close.Position = UDim2.new(1,-40,0,0)
+Close.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Close.TextColor3 = Color3.fromRGB(255,80,80)
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 18
 Close.Text = "X"
-Close.TextColor3 = Color3.fromRGB(255, 80, 80)
-Close.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-Close.BorderSizePixel = 0
-Close.Font = Enum.Font.SourceSansBold
-Close.TextSize = 20
 Close.Parent = MainFrame
-Close.MouseButton1Click:Connect(function()
-	UI:Destroy()
-end)
+Close.MouseButton1Click:Connect(function() UI:Destroy() end)
 
--- セクション作成関数
-local function createSection(name, order)
-	local section = Instance.new("Frame")
-	section.Size = UDim2.new(1, -20, 0, 60)
-	section.Position = UDim2.new(0, 10, 0, 40 + (order * 70))
-	section.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	section.BorderSizePixel = 0
-	section.Parent = MainFrame
+-- タブバー
+local Tabs = {"🏠 ホーム","⚔️ 戦闘","🏃 移動","👁️ 視界","🤖 自動化","⚙️ 設定"}
+local TabFrames = {}
+local TabButtons = {}
+local TabBar = Instance.new("Frame")
+TabBar.Size = UDim2.new(1,0,0,40)
+TabBar.Position = UDim2.new(0,0,0,40)
+TabBar.BackgroundTransparency = 1
+TabBar.Parent = MainFrame
 
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 25)
-	title.Text = name
-	title.Font = Enum.Font.SourceSansBold
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.BackgroundTransparency = 1
-	title.TextSize = 16
-	title.Parent = section
-
-	return section
+local function selectTab(name)
+	for t, frame in pairs(TabFrames) do
+		frame.Visible = (t==name)
+	end
+	for t, btn in pairs(TabButtons) do
+		btn.BackgroundColor3 = (t==name) and Color3.fromRGB(60,60,60) or Color3.fromRGB(30,30,30)
+	end
 end
 
--- トグルボタン作成
-local function createToggle(section, text, callback)
-	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.new(0, 150, 0, 30)
-	toggle.Position = UDim2.new(0, 10, 0, 25)
-	toggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-	toggle.Font = Enum.Font.SourceSans
-	toggle.TextSize = 16
-	toggle.Text = text .. ": OFF"
-	toggle.Parent = section
+for i, tab in pairs(Tabs) do
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0,80,0,40)
+	btn.Position = UDim2.new(0,(i-1)*80,0,0)
+	btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 16
+	btn.Text = tab
+	btn.Parent = TabBar
+	TabButtons[tab] = btn
 
-	local enabled = false
-	toggle.MouseButton1Click:Connect(function()
-		enabled = not enabled
-		toggle.Text = text .. ": " .. (enabled and "ON" or "OFF")
-		toggle.BackgroundColor3 = enabled and Color3.fromRGB(80, 140, 80) or Color3.fromRGB(70, 70, 70)
-		callback(enabled)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,-20,1,-80)
+	frame.Position = UDim2.new(0,10,0,80)
+	frame.BackgroundTransparency = 1
+	frame.Parent = MainFrame
+	TabFrames[tab] = frame
+
+	btn.MouseButton1Click:Connect(function() selectTab(tab) end)
+end
+
+selectTab("🏠 ホーム") -- 初期表示
+
+-- ==================== AIモジュール ====================
+
+local AIModules = {}
+
+-- 1. 自動回復
+AIModules.AutoHeal={enabled=false,threshold=50,healAmount=5,interval=1,
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(self.interval)
+			local char=player.Character
+			if char then
+				local hum=char:FindFirstChildOfClass("Humanoid")
+				if hum and hum.Health<self.threshold and hum.Health>0 then
+					hum.Health=math.min(hum.Health+self.healAmount,hum.MaxHealth)
+				end
+			end
+		end
+	end)
+end,stop=function(self) self.enabled=false end}
+
+-- 2. 敵検出
+AIModules.EnemyDetector={enabled=false,range=100,detectedEnemies={},
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(0.5)
+			self.detectedEnemies={}
+			local char=player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local pos=char.HumanoidRootPart.Position
+				for _,p in pairs(Players:GetPlayers()) do
+					if p~=player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+						local d=(pos-p.Character.HumanoidRootPart.Position).Magnitude
+						if d<=self.range then table.insert(self.detectedEnemies,{player=p,distance=math.floor(d)}) end
+					end
+				end
+			end
+		end
+	end)
+end,stop=function(self) self.enabled=false; self.detectedEnemies={} end}
+
+-- 3. 自動ジャンプ
+AIModules.AutoJump={enabled=false,interval=3,
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(self.interval)
+			local char=player.Character
+			if char then local hum=char:FindFirstChildOfClass("Humanoid") if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end end
+		end
+	end)
+end,stop=function(self) self.enabled=false end}
+
+-- 4. スピードブースト
+AIModules.SpeedBoost={enabled=false,multiplier=1.5,originalSpeed=16,
+start=function(self)
+	self.enabled=true
+	local char=player.Character
+	if char then local hum=char:FindFirstChildOfClass("Humanoid") if hum then self.originalSpeed=hum.WalkSpeed hum.WalkSpeed=self.originalSpeed*self.multiplier end end
+end,
+stop=function(self)
+	self.enabled=false
+	local char=player.Character
+	if char then local hum=char:FindFirstChildOfClass("Humanoid") if hum then hum.WalkSpeed=self.originalSpeed end end
+end}
+
+-- 5. 無限ジャンプ
+AIModules.InfiniteJump={enabled=false,connection=nil,
+start=function(self)
+	self.enabled=true
+	self.connection=UserInputService.JumpRequest:Connect(function()
+		if self.enabled then local char=player.Character if char then local hum=char:FindFirstChildOfClass("Humanoid") if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end end end
+	end)
+end,stop=function(self) self.enabled=false if self.connection then self.connection:Disconnect() self.connection=nil end end}
+
+-- 6. 視界強化
+AIModules.VisionEnhancer={enabled=false,originalFog=0,originalBrightness=1,
+start=function(self) self.enabled=true self.originalFog=Lighting.FogEnd self.originalBrightness=Lighting.Brightness Lighting.FogEnd=100000 Lighting.Brightness=2 end,
+stop=function(self) self.enabled=false Lighting.FogEnd=self.originalFog Lighting.Brightness=self.originalBrightness end}
+
+-- 7. 自動収集
+AIModules.AutoCollect={enabled=false,range=50,
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(0.5)
+			local char=player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local pos=char.HumanoidRootPart.Position
+				for _,obj in pairs(workspace:GetDescendants()) do
+					if obj:IsA("Part") and (obj.Name=="Coin" or obj.Name=="Gem" or obj.Name:find("Coin")) and obj.CanCollide then
+						local d=(pos-obj.Position).Magnitude
+						if d<=self.range then obj.CFrame=char.HumanoidRootPart.CFrame end
+					end
+				end
+			end
+		end
+	end)
+end,stop=function(self) self.enabled=false end}
+
+-- 8. フライ
+AIModules.Fly={enabled=false,speed=50,connection=nil,bodyVelocity=nil,bodyGyro=nil,
+start=function(self)
+	self.enabled=true
+	local char=player.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local root=char.HumanoidRootPart
+		self.bodyVelocity=Instance.new("BodyVelocity")
+		self.bodyVelocity.MaxForce=Vector3.new(9e9,9e9,9e9)
+		self.bodyVelocity.Velocity=Vector3.new(0,0,0)
+		self.bodyVelocity.Parent=root
+		self.bodyGyro=Instance.new("BodyGyro")
+		self.bodyGyro.MaxTorque=Vector3.new(9e9,9e9,9e9)
+		self.bodyGyro.P=9e4
+		self.bodyGyro.Parent=root
+		self.connection=RunService.RenderStepped:Connect(function()
+			if self.enabled then
+				local cam=workspace.CurrentCamera
+				local moveDir=Vector3.new(0,0,0)
+				if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir+=cam.CFrame.LookVector end
+				if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir-=cam.CFrame.LookVector end
+				if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir-=cam.CFrame.RightVector end
+				if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir+=cam.CFrame.RightVector end
+				if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir+=Vector3.new(0,1,0) end
+				if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir-=Vector3.new(0,1,0) end
+				self.bodyVelocity.Velocity=moveDir*self.speed
+				self.bodyGyro.CFrame=cam.CFrame
+			end
+		end)
+	end
+end,
+stop=function(self)
+	self.enabled=false
+	if self.connection then self.connection:Disconnect() self.connection=nil end
+	if self.bodyVelocity then self.bodyVelocity:Destroy() self.bodyVelocity=nil end
+	if self.bodyGyro then self.bodyGyro:Destroy() self.bodyGyro=nil end
+end}
+
+-- 9. 自動回避
+AIModules.AutoDodge={enabled=false,dodgeDistance=10,
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(0.1)
+			local char=player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local root=char.HumanoidRootPart
+				local hum=char:FindFirstChildOfClass("Humanoid")
+				for _,obj in pairs(workspace:GetDescendants()) do
+					if obj:IsA("Part") and (obj.Name:lower():find("danger") or obj.Name:lower():find("trap") or obj.Name:lower():find("lava")) then
+						local distance=(root.Position-obj.Position).Magnitude
+						if distance<self.dodgeDistance and hum then hum:Move((root.Position-obj.Position).Unit) end
+					end
+				end
+			end
+		end
+	end)
+end,
+stop=function(self) self.enabled=false end}
+
+-- 10. 自動照準
+AIModules.AutoAim={enabled=false,
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(0.1)
+			local char=player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local nearest=nil
+				local nearestDist=math.huge
+				for _,p in pairs(Players:GetPlayers()) do
+					if p~=player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+						local h=p.Character:FindFirstChildOfClass("Humanoid")
+						if h and h.Health>0 then
+							local d=(char.HumanoidRootPart.Position-p.Character.HumanoidRootPart.Position).Magnitude
+							if d<nearestDist then nearestDist=d nearest=p.Character end
+						end
+					end
+				end
+				if nearest and workspace.CurrentCamera then
+					workspace.CurrentCamera.CFrame=CFrame.new(workspace.CurrentCamera.CFrame.Position,nearest.HumanoidRootPart.Position)
+				end
+			end
+		end
+	end)
+end,stop=function(self) self.enabled=false end}
+
+-- 11. リソース監視
+AIModules.ResourceMonitor={enabled=false,stats={fps=0,ping=0,memory=0},
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(1)
+			local last=tick()
+			RunService.RenderStepped:Wait()
+			self.stats.fps=math.floor(1/(tick()-last))
+			self.stats.ping=math.floor(player:GetNetworkPing()*1000)
+			self.stats.memory=math.floor(collectgarbage("count")/1024)
+		end
+	end)
+end,
+stop=function(self) self.enabled=false end}
+
+-- 12. ウォールハック
+AIModules.Wallhack={enabled=false,highlights={},
+start=function(self)
+	self.enabled=true
+	spawn(function()
+		while self.enabled do
+			wait(0.5)
+			for _,p in pairs(Players:GetPlayers()) do
+				if p~=player and p.Character then
+					if not self.highlights[p.UserId] then
+						local hl=Instance.new("Highlight")
+						hl.FillColor=Color3.fromRGB(255,0,0)
+						hl.OutlineColor=Color3.fromRGB(255,255,0)
+						hl.FillTransparency=0.5
+						hl.OutlineTransparency=0
+						hl.Parent=p.Character
+						self.highlights[p.UserId]=hl
+					end
+				end
+			end
+		end
+	end)
+end,
+stop=function(self)
+	self.enabled=false
+	for _,hl in pairs(self.highlights) do if hl then hl:Destroy() end end
+	self.highlights={}
+end}
+
+-- 13. 無敵モード
+AIModules.GodMode={enabled=false,connection=nil,
+start=function(self)
+	self.enabled=true
+	local char=player.Character
+	if char then
+		local hum=char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			self.connection=hum.HealthChanged:Connect(function()
+				if self.enabled then hum.Health=hum.MaxHealth end
+			end)
+		end
+	end
+end,
+stop=function(self)
+	self.enabled=false
+	if self.connection then self.connection:Disconnect() self.connection=nil end
+end}
+
+-- ==================== タブにUI追加 ====================
+
+local function addToggle(tabFrame,name,module,posY)
+	local btn=Instance.new("TextButton")
+	btn.Size=UDim2.new(0,200,0,30)
+	btn.Position=UDim2.new(0,10,0,posY)
+	btn.BackgroundColor3=Color3.fromRGB(50,50,50)
+	btn.TextColor3=Color3.fromRGB(255,255,255)
+	btn.Font=Enum.Font.GothamBold
+	btn.TextSize=16
+	btn.Text=name..": OFF"
+	btn.Parent=tabFrame
+	local enabled=false
+	btn.MouseButton1Click:Connect(function()
+		enabled=not enabled
+		btn.Text=name..": "..(enabled and "ON" or "OFF")
+		if enabled then module:start() else module:stop() end
 	end)
 end
 
--- ========= 機能一覧 =========
+-- ホームタブ
+do
+	local frame=TabFrames["🏠 ホーム"]
+	local label=Instance.new("TextLabel")
+	label.Size=UDim2.new(1,0,1,0)
+	label.Text="ようこそ! AI Control Hub へ\n13個のAI機能を搭載しています。"
+	label.TextColor3=Color3.fromRGB(255,255,255)
+	label.Font=Enum.Font.GothamBold
+	label.TextScaled=true
+	label.BackgroundTransparency=1
+	label.Parent=frame
+end
 
--- Section 1: 無限ジャンプ
-local s1 = createSection("🦘 無限ジャンプ", 0)
-createToggle(s1, "Toggle", function(state)
-	if state then
-		_G.infjump = true
-		game:GetService("UserInputService").JumpRequest:Connect(function()
-			if _G.infjump and game.Players.LocalPlayer.Character then
-				local h = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-				if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
-			end
-		end)
-	else
-		_G.infjump = false
-	end
-end)
+-- 戦闘
+do
+	local frame=TabFrames["⚔️ 戦闘"]
+	addToggle(frame,"自動照準",AIModules.AutoAim,10)
+	addToggle(frame,"敵検出",AIModules.EnemyDetector,50)
+	addToggle(frame,"自動回避",AIModules.AutoDodge,90)
+	addToggle(frame,"ウォールハック",AIModules.Wallhack,130)
+	addToggle(frame,"無敵モード",AIModules.GodMode,170)
+end
 
--- Section 2: フライ
-local s2 = createSection("🕊️ フライモード", 1)
-createToggle(s2, "Toggle", function(state)
-	local player = game.Players.LocalPlayer
-	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
+-- 移動
+do
+	local frame=TabFrames["🏃 移動"]
+	addToggle(frame,"スピードブースト",AIModules.SpeedBoost,10)
+	addToggle(frame,"無限ジャンプ",AIModules.InfiniteJump,50)
+	addToggle(frame,"フライモード",AIModules.Fly,90)
+	addToggle(frame,"自動ジャンプ",AIModules.AutoJump,130)
+end
 
-	if state then
-		_G.fly = true
-		local bv = Instance.new("BodyVelocity")
-		local bg = Instance.new("BodyGyro")
-		bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-		bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-		bv.Parent = hrp
-		bg.Parent = hrp
+-- 視界
+do
+	local frame=TabFrames["👁️ 視界"]
+	addToggle(frame,"視界強化",AIModules.VisionEnhancer,10)
+end
 
-		task.spawn(function()
-			while _G.fly do
-				task.wait()
-				local cam = workspace.CurrentCamera
-				local dir = Vector3.zero
-				local uis = game:GetService("UserInputService")
-				if uis:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-				if uis:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-				if uis:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-				if uis:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-				if uis:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
-				if uis:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
-				bv.Velocity = dir * 60
-				bg.CFrame = cam.CFrame
-			end
-			bv:Destroy()
-			bg:Destroy()
-		end)
-	else
-		_G.fly = false
-	end
-end)
+-- 自動化
+do
+	local frame=TabFrames["🤖 自動化"]
+	addToggle(frame,"自動回復",AIModules.AutoHeal,10)
+	addToggle(frame,"自動収集",AIModules.AutoCollect,50)
+end
 
--- Section 3: 自動回復
-local s3 = createSection("❤️ 自動回復", 2)
-createToggle(s3, "Toggle", function(state)
-	if state then
-		_G.autoheal = true
-		task.spawn(function()
-			while _G.autoheal do
-				task.wait(1)
-				local p = game.Players.LocalPlayer
-				local h = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
-				if h and h.Health < h.MaxHealth then
-					h.Health = math.min(h.Health + 5, h.MaxHealth)
-				end
-			end
-		end)
-	else
-		_G.autoheal = false
-	end
-end)
+-- 設定
+do
+	local frame=TabFrames["⚙️ 設定"]
+	local reloadBtn=Instance.new("TextButton")
+	reloadBtn.Size=UDim2.new(0,200,0,30)
+	reloadBtn.Position=UDim2.new(0,10,0,10)
+	reloadBtn.BackgroundColor3=Color3.fromRGB(50,50,50)
+	reloadBtn.TextColor3=Color3.fromRGB(255,255,255)
+	reloadBtn.Font=Enum.Font.GothamBold
+	reloadBtn.TextSize=16
+	reloadBtn.Text="UIを再読み込み"
+	reloadBtn.Parent=frame
+	reloadBtn.MouseButton1Click:Connect(function()
+		UI:Destroy()
+		wait(0.5)
+		loadstring(game:HttpGet('https://pastebin.com/raw/xxxxxx'))() -- ここは自身の再ロードURL
+	end)
+end
+
+print("✨ AI Control Hub 起動完了 (KRNL / Rayfield風)")
